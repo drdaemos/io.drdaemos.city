@@ -1,7 +1,6 @@
 package io.drdaemos.city.data
 
 import io.drdaemos.city.data.exceptions.OutOfBoundsException
-import io.drdaemos.city.data.exceptions.PositionNotEmptyException
 
 /**
  * Quad Tree is a 2d positioning structure with 0:0 point in top-left corner
@@ -17,7 +16,7 @@ class QuadTreeNode (override val box: BoundingBox) : QuadTreeNodeInterface {
 
     private val quadrants: MutableMap<Quadrants, QuadTreeNodeInterface> = mutableMapOf()
 
-    fun insert(position: Position, value: Any): Boolean {
+    override fun insert(position: Position, value: Any): Boolean {
         if (!box.contains(position)) {
             throw OutOfBoundsException()
         }
@@ -31,50 +30,50 @@ class QuadTreeNode (override val box: BoundingBox) : QuadTreeNodeInterface {
         }
     }
 
-    fun removeAt(position: Position): Boolean {
+    override fun removeAt(position: Position): Boolean {
         if (!box.contains(position)) {
             return false
         }
 
         for ((direction, node) in quadrants) {
-            if (node is QuadTreeLeaf && node.contains(position)) {
-                quadrants.remove(direction)
-                return true
-            } else if (node is QuadTreeNode && node.removeAt(position)) {
-                // contract 1-child nodes
-                if (node.quadrants.count() == 1) {
-                    val lastKey = node.quadrants.keys.first()
-                    quadrants.replace(direction, node.quadrants[lastKey]!!)
-                }
-                return true
-            } else {
+            if (!node.removeAt(position)) {
                 continue
+            } else {
+                // removal successful
+                if (node is QuadTreeLeaf) {
+                    // drop leaf if empty
+                    if (node.count() == 0) quadrants.remove(direction)
+                    return true
+                } else if (node is QuadTreeNode) {
+                    // contract 1-child nodes
+                    if (node.quadrants.count() == 1) {
+                        val lastKey = node.quadrants.keys.first()
+                        quadrants.replace(direction, node.quadrants[lastKey]!!)
+                    }
+                    return true
+                }
             }
         }
 
         return false
     }
 
-    fun findValueAt(lookup: Position): Any? {
-        if (!box.contains(lookup)) {
+    override fun findValueAt(position: Position): Any? {
+        if (!box.contains(position)) {
             return null
         }
 
-        for ((direction, node) in quadrants) {
-            if (node is QuadTreeLeaf && node.contains(lookup)) {
-                return node.value
-            } else if (node is QuadTreeNode) {
-                val value = node.findValueAt(lookup)
-                if (value != null) return value else continue
-            }
+        for ((_, node) in quadrants) {
+            val value = node.findValueAt(position)
+            if (value != null) return value else continue
         }
 
         return null
     }
 
-    fun findObjectsInside(box: BoundingBox) {
-
-    }
+//    fun findObjectsInside(box: BoundingBox) {
+//
+//    }
 
     private fun tryInsertInto(direction: Quadrants, position: Position, value: Any): Boolean {
         val quadBox = when (direction) {
@@ -89,23 +88,24 @@ class QuadTreeNode (override val box: BoundingBox) : QuadTreeNodeInterface {
         }
 
         if (quadrants.contains(direction)) {
-            if (quadrants[direction] is QuadTreeNode) {
-                (quadrants[direction] as QuadTreeNode).insert(position, value)
-            } else {
-                // for leaf we have to replace it with node and reinsert previous value
+            val insertResult = quadrants[direction]!!.insert(position, value)
+
+            // when insert fails: it means leaf is overloaded
+            // we have to replace leaf with node and reinsert previous values
+            if (!insertResult) {
                 val oldLeaf = (quadrants[direction] as QuadTreeLeaf)
 
-                if (position == oldLeaf.position) {
-                    throw PositionNotEmptyException()
-                }
-
                 val newNode = QuadTreeNode(quadBox)
-                newNode.insert(oldLeaf.position, oldLeaf.value)
+                // reinserting existing nodes
+                for (child in oldLeaf.getChildren()) {
+                    newNode.insert(child.first, child.second)
+                }
                 newNode.insert(position, value)
                 quadrants[direction] = newNode
             }
         } else {
-            quadrants[direction] = QuadTreeLeaf(quadBox, position, value)
+            quadrants[direction] = QuadTreeLeaf(quadBox)
+            quadrants[direction]?.insert(position, value)
         }
 
         return true

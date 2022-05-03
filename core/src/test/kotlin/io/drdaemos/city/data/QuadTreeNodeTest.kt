@@ -33,13 +33,18 @@ class QuadTreeNodeTest {
     @Test
     fun shouldAddMultipleNodesToQuadTree() {
         /* setup 3:3 quad tree
-        | 0:0 |         | 2:0 |
-        |     | 1.5:1.5 |     |
-        | 0:2 |         | new |
+        | 6 dots |         | 2:0 |
+        |        | 1.5:1.5 |     |
+        | 0:2    |         | new |
          */
 
         val tree = QuadTreeNode(BoundingBox(Position(0.0f, 0.0f), Position(3.0f, 3.0f)))
         tree.insert(Position(0.0f, 0.0f),"0:0")
+        tree.insert(Position(0.1f, 0.1f),"0.1:0.1")
+        tree.insert(Position(0.2f, 0.2f),"0.2:0.2")
+        tree.insert(Position(0.3f, 0.3f),"0.3:0.3")
+        tree.insert(Position(0.4f, 0.4f),"0.4:0.4")
+        tree.insert(Position(0.5f, 0.5f),"0.5:0.5")
         tree.insert(Position(0.0f, 2.0f),"0:2")
         tree.insert(Position(1.5f, 1.5f),"1.5:1.5")
         tree.insert(Position(2.0f, 0.0f),"2:0")
