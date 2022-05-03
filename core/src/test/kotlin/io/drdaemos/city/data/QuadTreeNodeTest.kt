@@ -37,7 +37,6 @@ class QuadTreeNodeTest {
         |        | 1.5:1.5 |     |
         | 0:2    |         | new |
          */
-
         val tree = QuadTreeNode(BoundingBox(Position(0.0f, 0.0f), Position(3.0f, 3.0f)))
         tree.insert(Position(0.0f, 0.0f),"0:0")
         tree.insert(Position(0.1f, 0.1f),"0.1:0.1")
@@ -63,7 +62,6 @@ class QuadTreeNodeTest {
         |     | 1.5:1.5 |     |
         | 0:2 |         |     |
          */
-
         val tree = QuadTreeNode(BoundingBox(Position(0.0f, 0.0f), Position(3.0f, 3.0f)))
         tree.insert(Position(0.0f, 0.0f),"0:0")
         tree.insert(Position(0.0f, 2.0f),"0:2")
@@ -73,5 +71,28 @@ class QuadTreeNodeTest {
         // test
         assertTrue(tree.removeAt(Position(1.5f, 1.5f)))
         assertNull(tree.findValueAt(Position(1.5f, 1.5f)))
+    }
+
+    @Test
+    fun shouldFindNodesInArea() {
+        /* setup 3:3 quad tree
+        | 0:0 |         | 2:0 |
+        |     | 1:1     |     |
+        | 0:2 |         |     |
+         */
+        val tree = QuadTreeNode(BoundingBox(Position(0.0f, 0.0f), Position(3.0f, 3.0f)))
+        tree.insert(Position(0.0f, 0.0f),"0:0")
+        tree.insert(Position(0.0f, 2.0f),"0:2")
+        tree.insert(Position(1.0f, 1.0f),"1:1")
+        tree.insert(Position(2.0f, 0.0f),"2:0")
+
+        val expected = listOf(
+            PositionedValue(Position(0.0f, 2.0f),"0:2"),
+            PositionedValue(Position(1.0f, 1.0f),"1:1")
+        )
+
+        // test
+        val actual = tree.findObjectsInside(BoundingBox(Position(0.0f, 1.0f), Position(1.5f, 2.1f)))
+        assertTrue(actual.size == expected.size && actual.containsAll(expected), "$actual");
     }
 }

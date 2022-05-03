@@ -71,9 +71,19 @@ class QuadTreeNode (override val box: BoundingBox) : QuadTreeNodeInterface {
         return null
     }
 
-//    fun findObjectsInside(box: BoundingBox) {
-//
-//    }
+    override fun findObjectsInside(area: BoundingBox): List<PositionedValue> {
+        if (!box.intersects(area)) {
+            return emptyList()
+        }
+
+        val result = mutableListOf<PositionedValue>()
+
+        for ((_, node) in quadrants) {
+            result.addAll(node.findObjectsInside(area))
+        }
+
+        return result
+    }
 
     private fun tryInsertInto(direction: Quadrants, position: Position, value: Any): Boolean {
         val quadBox = when (direction) {
@@ -98,7 +108,7 @@ class QuadTreeNode (override val box: BoundingBox) : QuadTreeNodeInterface {
                 val newNode = QuadTreeNode(quadBox)
                 // reinserting existing nodes
                 for (child in oldLeaf.getChildren()) {
-                    newNode.insert(child.first, child.second)
+                    newNode.insert(child.position, child.value)
                 }
                 newNode.insert(position, value)
                 quadrants[direction] = newNode
