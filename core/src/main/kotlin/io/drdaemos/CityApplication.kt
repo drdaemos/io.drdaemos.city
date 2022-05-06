@@ -1,35 +1,12 @@
 package io.drdaemos
 
-import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.Texture.TextureFilter.Linear
-import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import io.drdaemos.city.presentation.AbstractGameScreen
+import io.drdaemos.city.presentation.WorldScreen
 import ktx.app.KtxGame
-import ktx.app.KtxScreen
-import ktx.app.clearScreen
-import ktx.assets.disposeSafely
-import ktx.assets.toInternalFile
-import ktx.graphics.use
 
-class CityApplication : KtxGame<KtxScreen>() {
+class CityApplication : KtxGame<AbstractGameScreen>() {
     override fun create() {
-        addScreen(FirstScreen())
-        setScreen<FirstScreen>()
-    }
-}
-
-class FirstScreen : KtxScreen {
-//    private val image = Texture("logo.png".toInternalFile(), true).apply { setFilter(Linear, Linear) }
-    private val batch = SpriteBatch()
-
-    override fun render(delta: Float) {
-        clearScreen(red = 0.0f, green = 0.0f, blue = 0.0f)
-        batch.use {
-//            it.draw(image, 100f, 160f)
-        }
-    }
-
-    override fun dispose() {
-//        image.disposeSafely()
-        batch.disposeSafely()
+        addScreen(WorldScreen())
+        setScreen<WorldScreen>()
     }
 }

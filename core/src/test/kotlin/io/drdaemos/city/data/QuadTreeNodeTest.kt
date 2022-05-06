@@ -93,6 +93,6 @@ class QuadTreeNodeTest {
 
         // test
         val actual = tree.findObjectsInside(BoundingBox(Position(0.0f, 1.0f), Position(1.5f, 2.1f)))
-        assertTrue(actual.size == expected.size && actual.containsAll(expected), "$actual");
+        assertTrue(actual.size == expected.size && actual.containsAll(expected), "$actual")
     }
 }

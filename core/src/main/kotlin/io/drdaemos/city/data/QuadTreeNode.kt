@@ -12,7 +12,7 @@ import io.drdaemos.city.data.exceptions.OutOfBoundsException
  * . . o . .
  * y
  */
-class QuadTreeNode (override val box: BoundingBox) : QuadTreeNodeInterface {
+class QuadTreeNode(override val box: BoundingBox) : QuadTreeNodeInterface {
 
     private val quadrants: MutableMap<Quadrants, QuadTreeNodeInterface> = mutableMapOf()
 
@@ -23,9 +23,9 @@ class QuadTreeNode (override val box: BoundingBox) : QuadTreeNodeInterface {
 
         return when {
             tryInsertInto(Quadrants.NorthWest, position, value)
-                    || tryInsertInto(Quadrants.NorthEast, position, value)
-                    || tryInsertInto(Quadrants.SouthEast, position, value)
-                    || tryInsertInto(Quadrants.SouthWest, position, value) -> true
+              || tryInsertInto(Quadrants.NorthEast, position, value)
+              || tryInsertInto(Quadrants.SouthEast, position, value)
+              || tryInsertInto(Quadrants.SouthWest, position, value) -> true
             else -> false
         }
     }
