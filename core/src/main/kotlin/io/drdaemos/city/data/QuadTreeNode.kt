@@ -1,6 +1,10 @@
 package io.drdaemos.city.data
 
 import io.drdaemos.city.data.exceptions.OutOfBoundsException
+import io.drdaemos.city.data.iterators.DepthFirstQuadTreeIterator
+import io.drdaemos.city.data.iterators.IteratorStack
+import io.drdaemos.city.data.iterators.StackFrame
+import java.util.Stack
 
 /**
  * Quad Tree is a 2d positioning structure with 0:0 point in top-left corner
@@ -12,9 +16,9 @@ import io.drdaemos.city.data.exceptions.OutOfBoundsException
  * . . o . .
  * y
  */
-class QuadTreeNode(override val box: BoundingBox) : QuadTreeNodeInterface {
+class QuadTreeNode(override val box: BoundingBox, override val parent: QuadTreeNodeInterface? = null) : QuadTreeNodeInterface, Iterable<QuadTreeNodeInterface> {
 
-    private val quadrants: MutableMap<Quadrants, QuadTreeNodeInterface> = mutableMapOf()
+    val quadrants: MutableMap<Quadrants, QuadTreeNodeInterface> = mutableMapOf()
 
     override fun insert(position: Position, value: Any): Boolean {
         if (!box.contains(position)) {
@@ -105,7 +109,7 @@ class QuadTreeNode(override val box: BoundingBox) : QuadTreeNodeInterface {
             if (!insertResult) {
                 val oldLeaf = (quadrants[direction] as QuadTreeLeaf)
 
-                val newNode = QuadTreeNode(quadBox)
+                val newNode = QuadTreeNode(quadBox, this)
                 // reinserting existing nodes
                 for (child in oldLeaf.getChildren()) {
                     newNode.insert(child.position, child.value)
@@ -114,7 +118,7 @@ class QuadTreeNode(override val box: BoundingBox) : QuadTreeNodeInterface {
                 quadrants[direction] = newNode
             }
         } else {
-            quadrants[direction] = QuadTreeLeaf(quadBox)
+            quadrants[direction] = QuadTreeLeaf(quadBox, this)
             quadrants[direction]?.insert(position, value)
         }
 
@@ -137,5 +141,13 @@ class QuadTreeNode(override val box: BoundingBox) : QuadTreeNodeInterface {
     private fun getSouthWestBox(): BoundingBox {
         val center = box.getCenter()
         return BoundingBox(Position(box.topLeft.xPos, center.yPos), Position(center.xPos, box.bottomRight.yPos))
+    }
+
+    override fun iterator(): Iterator<QuadTreeNodeInterface> {
+        return DepthFirstQuadTreeIterator(this)
+    }
+
+    override fun toString(): String {
+        return "Node: $box, ${quadrants.count()}"
     }
 }

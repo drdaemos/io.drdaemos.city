@@ -6,6 +6,11 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.MathUtils.random
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
+import io.drdaemos.city.data.BoundingBox
+import io.drdaemos.city.data.Position
+import io.drdaemos.city.data.PositionedValue
+import io.drdaemos.city.data.QuadTreeNode
+import io.drdaemos.city.generation.RandomPointRegionGenerator
 import io.drdaemos.city.simulation.world.WorldInstance
 import ktx.graphics.circle
 import ktx.graphics.use
@@ -15,7 +20,8 @@ import ktx.scene2d.label
 class WorldScreen : AbstractGameScreen() {
     private val world = WorldInstance()
     val shapeRenderer = ShapeRenderer()
-    var circles = mutableListOf<Triple<Float, Float, Float>>()
+    lateinit var pointsTree: QuadTreeNode
+    lateinit var points: List<PositionedValue>
     lateinit var cameraPos: Label
 
     override fun constructUi(stage: Stage) {
@@ -28,11 +34,11 @@ class WorldScreen : AbstractGameScreen() {
     override fun show() {
         super.show()
 
-        for (i in 1..100) {
-            circles.add(
-                Triple(random.nextFloat() * 128.0f, random.nextFloat() * 128.0f, random.nextFloat() * 10.0f)
-            )
-        }
+        val pointsGenerator = RandomPointRegionGenerator(128f, 128f, 50)
+        pointsTree = pointsGenerator.generate()
+        points = pointsTree.findObjectsInside(
+            BoundingBox(Position(0f, 0f), Position(128f, 128f))
+        )
     }
 
     override fun render(delta: Float) {
@@ -40,9 +46,9 @@ class WorldScreen : AbstractGameScreen() {
         camera.update()
         cameraPos.setText(camera.position.toString())
         shapeRenderer.use(ShapeRenderer.ShapeType.Line, camera) {
-            for (item in circles) {
-                shapeRenderer.rect(0.0f, 0.0f, 128.0f, 128.0f)
-                shapeRenderer.circle(item.first, item.second, item.third)
+            shapeRenderer.rect(0.0f, 0.0f, 128.0f, 128.0f)
+            for (item in points) {
+                shapeRenderer.circle(item.position.xPos, item.position.yPos, 1f)
             }
         }
     }

@@ -27,7 +27,7 @@ data class BoundingBox (val topLeft: Position, val bottomRight: Position) {
     }
 
     fun getCenter(): Position {
-        return Position((bottomRight.xPos - topLeft.xPos) / 2.0f, (bottomRight.yPos - topLeft.yPos) / 2.0f)
+        return Position(topLeft.xPos + (bottomRight.xPos - topLeft.xPos) / 2.0f, topLeft.yPos + (bottomRight.yPos - topLeft.yPos) / 2.0f)
     }
 
     override fun toString(): String {

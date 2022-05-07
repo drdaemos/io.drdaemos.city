@@ -5,7 +5,7 @@ import io.drdaemos.city.data.exceptions.PositionNotEmptyException
 
 const val LEAF_CAPACITY = 4
 
-data class QuadTreeLeaf (override val box: BoundingBox): QuadTreeNodeInterface {
+data class QuadTreeLeaf (override val box: BoundingBox, override val parent: QuadTreeNode): QuadTreeNodeInterface {
     private val children: MutableList<PositionedValue> = mutableListOf()
 
     override fun insert(position: Position, value: Any): Boolean {
@@ -47,5 +47,9 @@ data class QuadTreeLeaf (override val box: BoundingBox): QuadTreeNodeInterface {
 
     fun contains(position: Position): Boolean {
         return children.any { it.position == position }
+    }
+
+    override fun toString(): String {
+        return "Leaf: $box, ${count()}"
     }
 }
