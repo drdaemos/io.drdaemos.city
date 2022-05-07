@@ -30,6 +30,14 @@ data class BoundingBox (val topLeft: Position, val bottomRight: Position) {
         return Position(topLeft.xPos + (bottomRight.xPos - topLeft.xPos) / 2.0f, topLeft.yPos + (bottomRight.yPos - topLeft.yPos) / 2.0f)
     }
 
+    fun getWidth(): Float {
+        return bottomRight.xPos - topLeft.xPos
+    }
+
+    fun getHeight(): Float {
+        return bottomRight.yPos - topLeft.yPos
+    }
+
     override fun toString(): String {
         return "$topLeft - $bottomRight"
     }

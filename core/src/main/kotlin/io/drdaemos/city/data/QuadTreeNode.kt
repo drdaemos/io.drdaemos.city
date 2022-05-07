@@ -111,7 +111,7 @@ class QuadTreeNode(override val box: BoundingBox, override val parent: QuadTreeN
 
                 val newNode = QuadTreeNode(quadBox, this)
                 // reinserting existing nodes
-                for (child in oldLeaf.getChildren()) {
+                for (child in oldLeaf.children) {
                     newNode.insert(child.position, child.value)
                 }
                 newNode.insert(position, value)
