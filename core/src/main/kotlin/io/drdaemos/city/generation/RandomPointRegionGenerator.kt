@@ -8,9 +8,9 @@ import io.drdaemos.city.data.exceptions.PositionNotEmptyException
 
 class RandomPointRegionGenerator(val width: Float, val height: Float, val points: Int) {
     val boundary = BoundingBox(Position(0f, 0f), Position(width, height))
-    val map = QuadTreeNode(boundary)
+    val map = QuadTreeNode<Any?>(boundary)
 
-    fun generate(): QuadTreeNode {
+    fun generate(): QuadTreeNode<Any?> {
         for (i in 1..points) {
             try {
                 map.insert(Position(random.nextFloat() * width, random.nextFloat() * height), i)

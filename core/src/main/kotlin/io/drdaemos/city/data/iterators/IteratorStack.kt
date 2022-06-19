@@ -4,10 +4,10 @@ import io.drdaemos.city.data.QuadTreeNode
 import io.drdaemos.city.data.Quadrants
 import kotlin.collections.ArrayDeque
 
-class IteratorStack {
-    private val stack = ArrayDeque<StackFrame>()
+class IteratorStack<T> {
+    private val stack = ArrayDeque<StackFrame<T>>()
 
-    fun push(node: QuadTreeNode): StackFrame {
+    fun push(node: QuadTreeNode<T>): StackFrame<T> {
         val quads = node.quadrants.keys
         val queue = ArrayDeque<Quadrants>()
         queue.addAll(quads)
@@ -15,15 +15,15 @@ class IteratorStack {
         return stack.last()
     }
 
-    fun pop(): StackFrame {
+    fun pop(): StackFrame<T> {
         return stack.removeLast()
     }
 
-    fun peek(): StackFrame? {
+    fun peek(): StackFrame<T>? {
         return stack.lastOrNull()
     }
 
-    fun lookUp(): StackFrame? {
+    fun lookUp(): StackFrame<T>? {
         while (true) {
             val frame = peek()
             if (frame != null) {

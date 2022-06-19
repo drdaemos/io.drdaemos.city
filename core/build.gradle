@@ -12,6 +12,7 @@ dependencies {
 	api "io.github.libktx:ktx-actors:$ktxVersion"
 	api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 	implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    implementation "com.github.PolyRocketMatt:GAMELib:main-SNAPSHOT"
 }
 
 test {

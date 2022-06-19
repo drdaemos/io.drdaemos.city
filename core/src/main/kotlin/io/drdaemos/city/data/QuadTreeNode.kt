@@ -1,13 +1,15 @@
 package io.drdaemos.city.data
 
+import io.drdaemos.city.data.calculation.NearestObjectState
 import io.drdaemos.city.data.exceptions.OutOfBoundsException
 import io.drdaemos.city.data.iterators.DepthFirstQuadTreeIterator
 import io.drdaemos.city.data.iterators.IteratorStack
 import io.drdaemos.city.data.iterators.StackFrame
 import java.util.Stack
+import kotlin.math.sqrt
 
 /**
- * Quad Tree is a 2d positioning structure with 0:0 point in top-left corner
+ * Quad Tree is a spatial 2d structure with 0:0 point in top-left corner
  *
  *   0 1 2 . x        NW | NE
  * 0 . . . .          ---|---
@@ -16,11 +18,11 @@ import java.util.Stack
  * . . o . .
  * y
  */
-class QuadTreeNode(override val box: BoundingBox, override val parent: QuadTreeNodeInterface? = null) : QuadTreeNodeInterface, Iterable<QuadTreeNodeInterface> {
+open class QuadTreeNode<T> (val box: BoundingBox) : QuadTreeNodeInterface<T>, Iterable<QuadTreeNodeInterface<T>> {
 
-    val quadrants: MutableMap<Quadrants, QuadTreeNodeInterface> = mutableMapOf()
+    val quadrants: MutableMap<Quadrants, QuadTreeNodeInterface<T>> = mutableMapOf()
 
-    override fun insert(position: Position, value: Any): Boolean {
+    override fun insert(position: Position, value: T): Boolean {
         if (!box.contains(position)) {
             throw OutOfBoundsException()
         }
@@ -62,7 +64,7 @@ class QuadTreeNode(override val box: BoundingBox, override val parent: QuadTreeN
         return false
     }
 
-    override fun findValueAt(position: Position): Any? {
+    override fun findValueAt(position: Position): T? {
         if (!box.contains(position)) {
             return null
         }
@@ -75,12 +77,12 @@ class QuadTreeNode(override val box: BoundingBox, override val parent: QuadTreeN
         return null
     }
 
-    override fun findObjectsInside(area: BoundingBox): List<PositionedValue> {
+    override fun findObjectsInside(area: BoundingBox): List<PositionedValue<T>> {
         if (!box.intersects(area)) {
             return emptyList()
         }
 
-        val result = mutableListOf<PositionedValue>()
+        val result = mutableListOf<PositionedValue<T>>()
 
         for ((_, node) in quadrants) {
             result.addAll(node.findObjectsInside(area))
@@ -89,7 +91,66 @@ class QuadTreeNode(override val box: BoundingBox, override val parent: QuadTreeN
         return result
     }
 
-    private fun tryInsertInto(direction: Quadrants, position: Position, value: Any): Boolean {
+    override fun findNearestObject(position: Position): PositionedValue<T>? {
+        val innerState = NearestObjectState<T>()
+        return recursiveNearest(position, innerState)
+    }
+
+    private fun recursiveNearest(position: Position, state: NearestObjectState<T>): PositionedValue<T>? {
+        if (state.best != null && state.distance != null) {
+            // exclude this if point is farther away than best distance in either axis
+            if (position.x < box.topLeft.x - state.distance!!
+                || position.x > box.bottomRight.x + state.distance!!
+                || position.y < box.topLeft.y - state.distance!!
+                || position.y > box.bottomRight.y + state.distance!!) {
+                return state.best
+            }
+        }
+
+        // check if kid is on the right or left, and top or bottom
+        // and then recurse on most likely kids first, so we quickly find a
+        // nearby point and then exclude many larger rectangles later
+        val rl = if (2 * position.x > box.topLeft.x + box.bottomRight.x) 1 else 0
+        val bt = if (2 * position.y > box.topLeft.y + box.bottomRight.y) 1 else 0
+
+        val quadsToVisit = listOf(
+            getQuadrantByCode(bt * 2 + rl),
+            getQuadrantByCode(bt * 2 + (1 - rl)),
+            getQuadrantByCode((1 - bt) * 2 + rl),
+            getQuadrantByCode((1 - bt) * 2 + (1 - rl))
+        )
+
+        for (direction in quadsToVisit) {
+            val quad = quadrants[direction]
+            if (quad != null) {
+                val candidate = when (quad) {
+                    is QuadTreeNode -> quad.recursiveNearest(position, state)
+                    else -> quad.findNearestObject(position)
+                } ?: continue
+
+                val dist = candidate.position.dist(position)
+
+                if (state.distance == null || dist < state.distance!!) {
+                    state.best = candidate
+                    state.distance = position.dist(candidate.position)
+                }
+            }
+        }
+
+        return state.best
+    }
+
+    private fun getQuadrantByCode(code: Int): Quadrants {
+        return when (code) {
+            0 -> Quadrants.NorthWest
+            1 -> Quadrants.NorthEast
+            2 -> Quadrants.SouthWest
+            3 -> Quadrants.SouthEast
+            else -> throw Error("Unexpected code")
+        }
+    }
+
+    private fun tryInsertInto(direction: Quadrants, position: Position, value: T): Boolean {
         val quadBox = when (direction) {
             Quadrants.NorthWest -> getNorthWestBox()
             Quadrants.NorthEast -> getNorthEastBox()
@@ -109,7 +170,7 @@ class QuadTreeNode(override val box: BoundingBox, override val parent: QuadTreeN
             if (!insertResult) {
                 val oldLeaf = (quadrants[direction] as QuadTreeLeaf)
 
-                val newNode = QuadTreeNode(quadBox, this)
+                val newNode = QuadTreeNode<T>(quadBox)
                 // reinserting existing nodes
                 for (child in oldLeaf.children) {
                     newNode.insert(child.position, child.value)
@@ -118,7 +179,7 @@ class QuadTreeNode(override val box: BoundingBox, override val parent: QuadTreeN
                 quadrants[direction] = newNode
             }
         } else {
-            quadrants[direction] = QuadTreeLeaf(quadBox, this)
+            quadrants[direction] = QuadTreeLeaf(quadBox)
             quadrants[direction]?.insert(position, value)
         }
 
@@ -131,7 +192,7 @@ class QuadTreeNode(override val box: BoundingBox, override val parent: QuadTreeN
 
     private fun getNorthEastBox(): BoundingBox {
         val center = box.getCenter()
-        return BoundingBox(Position(center.xPos, box.topLeft.yPos), Position(box.bottomRight.xPos, center.yPos))
+        return BoundingBox(Position(center.x, box.topLeft.y), Position(box.bottomRight.x, center.y))
     }
 
     private fun getSouthEastBox(): BoundingBox {
@@ -140,10 +201,10 @@ class QuadTreeNode(override val box: BoundingBox, override val parent: QuadTreeN
 
     private fun getSouthWestBox(): BoundingBox {
         val center = box.getCenter()
-        return BoundingBox(Position(box.topLeft.xPos, center.yPos), Position(center.xPos, box.bottomRight.yPos))
+        return BoundingBox(Position(box.topLeft.x, center.y), Position(center.x, box.bottomRight.y))
     }
 
-    override fun iterator(): Iterator<QuadTreeNodeInterface> {
+    override fun iterator(): Iterator<QuadTreeNodeInterface<T>> {
         return DepthFirstQuadTreeIterator(this)
     }
 

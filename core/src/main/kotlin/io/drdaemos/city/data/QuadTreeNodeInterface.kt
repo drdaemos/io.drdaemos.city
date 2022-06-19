@@ -1,10 +1,9 @@
 package io.drdaemos.city.data
 
-interface QuadTreeNodeInterface {
-    val box: BoundingBox
-    val parent: QuadTreeNodeInterface?
-    fun insert(position: Position, value: Any): Boolean
+interface QuadTreeNodeInterface<T> {
+    fun insert(position: Position, value: T): Boolean
     fun removeAt(position: Position): Boolean
-    fun findValueAt(position: Position): Any?
-    fun findObjectsInside(area: BoundingBox): List<PositionedValue>
+    fun findValueAt(position: Position): T?
+    fun findObjectsInside(area: BoundingBox): List<PositionedValue<T>>
+    fun findNearestObject(position: Position): PositionedValue<T>?
 }

@@ -36,10 +36,10 @@ abstract class AbstractGameScreen : KtxScreen {
 
     override fun render(delta: Float) {
         uiStage.act()
-        uiStage.draw()
         batch.use(camera) {
             drawWithBatch(it, camera)
         }
+        uiStage.draw()
     }
 
     override fun dispose() {

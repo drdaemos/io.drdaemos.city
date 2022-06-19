@@ -1,7 +1,7 @@
 package io.drdaemos.city.data
 
-data class PositionedValue (val position: Position, val value: Any) {
+data class PositionedValue<T> (val position: Position, val value: T) {
     override fun toString(): String {
-        return "$position - $value"
+        return "${position.x}:${position.y} - $value"
     }
 }

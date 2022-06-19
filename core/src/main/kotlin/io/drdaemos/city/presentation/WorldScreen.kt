@@ -1,68 +1,95 @@
 package io.drdaemos.city.presentation
 
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.badlogic.gdx.math.MathUtils.random
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import io.drdaemos.city.data.*
-import io.drdaemos.city.generation.RandomPointRegionGenerator
+import io.drdaemos.city.generation.TerrainGenerator
+import io.drdaemos.city.generation.noise.BlueNoiseGenerator
 import io.drdaemos.city.simulation.world.WorldInstance
-import ktx.graphics.circle
+import ktx.actors.onClick
 import ktx.graphics.use
 import ktx.scene2d.actors
 import ktx.scene2d.label
+import ktx.scene2d.textButton
+
 
 class WorldScreen : AbstractGameScreen() {
     private val world = WorldInstance()
     val shapeRenderer = ShapeRenderer()
-    lateinit var pointsTree: QuadTreeNode
-    lateinit var points: List<PositionedValue>
+    val terrainGenerator = TerrainGenerator()
+    val blueNoiseGenerator = BlueNoiseGenerator(BoundingBox(Position(0f,0f), Position(1024f, 1024f)))
     lateinit var cameraPos: Label
+    lateinit var map : List<PositionedValue<Color>>
+    lateinit var randomPoints : List<Position>
 
     override fun constructUi(stage: Stage) {
-        cameraPos = Label("???", skin)
         stage.actors {
-        }
-        stage.addActor(cameraPos)
-    }
-
-    override fun show() {
-        super.show()
-
-        val pointsGenerator = RandomPointRegionGenerator(128f, 128f, 100)
-        pointsTree = pointsGenerator.generate()
-        points = pointsTree.findObjectsInside(
-            BoundingBox(Position(0f, 0f), Position(128f, 128f))
-        )
-    }
-
-    override fun render(delta: Float) {
-        super.render(delta)
-        camera.update()
-        cameraPos.setText(camera.position.toString())
-        shapeRenderer.use(ShapeRenderer.ShapeType.Line, camera) {
-            shapeRenderer.rect(0.0f, 0.0f, 128.0f, 128.0f)
-            for (item in pointsTree) {
-                when (item) {
-                    is QuadTreeNode -> shapeRenderer.rect(item.box.topLeft.xPos, item.box.topLeft.yPos, item.box.getWidth(), item.box.getHeight())
-                    is QuadTreeLeaf -> {
-                        shapeRenderer.rect(item.box.topLeft.xPos, item.box.topLeft.yPos, item.box.getWidth(), item.box.getHeight())
-                        for (point in item.children) {
-                            shapeRenderer.circle(point.position.xPos, point.position.yPos, 1f)
-
-                        }
-                    }
-                }
+            textButton("zoom +") {
+                x = 10f
+                y = 60f
+                width = 65f
+                onClick { increaseZoom() }
+            }
+            textButton("zoom -") {
+                x = 10f
+                y = 30f
+                width = 65f
+                onClick { decreaseZoom() }
+            }
+            cameraPos = label("") {
+                x = 10f
+                y = 10f
             }
         }
     }
 
+    override fun show() {
+        super.show()
+        map = terrainGenerator.generate()
+        randomPoints = blueNoiseGenerator.randomList(750)
+    }
+
+    override fun render(delta: Float) {
+        camera.update()
+        cameraPos.setText(camera.position.toString() + " - " + camera.zoom.toString())
+
+//        shapeRenderer.use(ShapeRenderer.ShapeType.Filled, camera) {
+//            for (item in map) {
+//                shapeRenderer.color = item.value as Color
+//                shapeRenderer.rect(item.position.x, item.position.y, 1f, 1f)
+//            }
+//        }
+
+        shapeRenderer.use(ShapeRenderer.ShapeType.Filled, camera) {
+            shapeRenderer.setColor(1f,1f,1f,1f)
+            for (item in randomPoints) {
+                shapeRenderer.circle(item.x, item.y, 10f)
+            }
+        }
+
+        super.render(delta)
+    }
+
     override fun setupCamera(camera: OrthographicCamera) {
-        camera.zoom = .3f
-        camera.position.set(64f, 64f, 0f)
+        camera.zoom = 2f
+        camera.position.set(512f, 512f, 0f)
         // noop
+    }
+
+    fun increaseZoom() {
+        if (camera.zoom > 0f) {
+            camera.zoom -= camera.zoom * .25f
+        }
+    }
+
+    fun decreaseZoom() {
+        if (camera.zoom > 0f) {
+            camera.zoom += camera.zoom * .25f
+        }
     }
 
     override fun drawWithBatch(batch: SpriteBatch, camera: OrthographicCamera) {

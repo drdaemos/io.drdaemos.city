@@ -5,9 +5,9 @@ import io.drdaemos.city.data.QuadTreeNode
 import io.drdaemos.city.data.QuadTreeNodeInterface
 import kotlin.NoSuchElementException
 
-class DepthFirstQuadTreeIterator(rootNode: QuadTreeNode) : Iterator<QuadTreeNodeInterface> {
-    var next: QuadTreeNodeInterface? = null
-    private val stack = IteratorStack()
+class DepthFirstQuadTreeIterator<T>(rootNode: QuadTreeNode<T>) : Iterator<QuadTreeNodeInterface<T>> {
+    var next: QuadTreeNodeInterface<T>? = null
+    private val stack = IteratorStack<T>()
 
     init {
         if (rootNode.quadrants.isNotEmpty()) {
@@ -18,7 +18,7 @@ class DepthFirstQuadTreeIterator(rootNode: QuadTreeNode) : Iterator<QuadTreeNode
 
     override fun hasNext(): Boolean = next != null
 
-    override fun next(): QuadTreeNodeInterface {
+    override fun next(): QuadTreeNodeInterface<T> {
         if (!hasNext()) {
             throw NoSuchElementException()
         }
@@ -32,7 +32,7 @@ class DepthFirstQuadTreeIterator(rootNode: QuadTreeNode) : Iterator<QuadTreeNode
     /**
      * Based on depth-first approach
      */
-    private fun findNext(current: QuadTreeNodeInterface): QuadTreeNodeInterface? {
+    private fun findNext(current: QuadTreeNodeInterface<T>): QuadTreeNodeInterface<T>? {
         when (current) {
             is QuadTreeNode -> {
                 return if (current.quadrants.isNotEmpty()) {
