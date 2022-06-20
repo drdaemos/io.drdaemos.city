@@ -1,6 +1,8 @@
 package io.drdaemos.city.data
 
 data class BoundingBox (val topLeft: Position, val bottomRight: Position) {
+    constructor(width: Float, height: Float) : this(Position(0f, 0f), Position(width, height))
+
     fun contains(position: Position): Boolean {
         return topLeft.x <= position.x && bottomRight.x >= position.x
                 && topLeft.y <= position.y && bottomRight.y >= position.y

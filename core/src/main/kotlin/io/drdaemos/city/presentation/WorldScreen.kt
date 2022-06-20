@@ -2,6 +2,7 @@ package io.drdaemos.city.presentation
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.scenes.scene2d.Stage
@@ -9,6 +10,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import io.drdaemos.city.data.*
 import io.drdaemos.city.generation.TerrainGenerator
 import io.drdaemos.city.generation.noise.BlueNoiseGenerator
+import io.drdaemos.city.simulation.world.Terrain
+import io.drdaemos.city.simulation.world.TerrainRegion
 import io.drdaemos.city.simulation.world.WorldInstance
 import ktx.actors.onClick
 import ktx.graphics.use
@@ -20,10 +23,11 @@ import ktx.scene2d.textButton
 class WorldScreen : AbstractGameScreen() {
     private val world = WorldInstance()
     val shapeRenderer = ShapeRenderer()
+    val polygonSpriteBatch = PolygonSpriteBatch()
     val terrainGenerator = TerrainGenerator()
     val blueNoiseGenerator = BlueNoiseGenerator(BoundingBox(Position(0f,0f), Position(1024f, 1024f)))
     lateinit var cameraPos: Label
-    lateinit var map : List<PositionedValue<Color>>
+    lateinit var map : Terrain
     lateinit var randomPoints : List<Position>
 
     override fun constructUi(stage: Stage) {
@@ -49,25 +53,19 @@ class WorldScreen : AbstractGameScreen() {
 
     override fun show() {
         super.show()
-        map = terrainGenerator.generate()
-        randomPoints = blueNoiseGenerator.randomList(750)
+        map = terrainGenerator.generateRegions()
     }
 
     override fun render(delta: Float) {
         camera.update()
         cameraPos.setText(camera.position.toString() + " - " + camera.zoom.toString())
 
-//        shapeRenderer.use(ShapeRenderer.ShapeType.Filled, camera) {
-//            for (item in map) {
-//                shapeRenderer.color = item.value as Color
-//                shapeRenderer.rect(item.position.x, item.position.y, 1f, 1f)
-//            }
+//        shapeRenderer.use(ShapeRenderer.ShapeType.Line, camera) {
 //        }
 
-        shapeRenderer.use(ShapeRenderer.ShapeType.Filled, camera) {
-            shapeRenderer.setColor(1f,1f,1f,1f)
-            for (item in randomPoints) {
-                shapeRenderer.circle(item.x, item.y, 10f)
+        polygonSpriteBatch.use(camera) {
+            for (region in map.regions) {
+                polygonSpriteBatch.draw(region.region(), 0f, 0f)
             }
         }
 

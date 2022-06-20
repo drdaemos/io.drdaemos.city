@@ -3,39 +3,52 @@ package io.drdaemos.city.generation
 import com.badlogic.gdx.graphics.Color
 import io.drdaemos.city.generation.noise.SimplexNoiseGenerator
 import com.badlogic.gdx.math.MathUtils.random
+import io.drdaemos.city.data.BoundingBox
 import io.drdaemos.city.data.Position
 import io.drdaemos.city.data.PositionedValue
+import io.drdaemos.city.data.TerrainType
+import io.drdaemos.city.generation.geometry.VoronoiDiagram
+import io.drdaemos.city.generation.noise.BlueNoiseGenerator
+import io.drdaemos.city.simulation.world.Terrain
+import io.drdaemos.city.simulation.world.TerrainRegion
 import kotlin.math.pow
 
 const val ISLAND_SHAPING = .6f
 const val NOISE_WAVELENGTH = 200
-const val TEST_MAP_WIDTH = 1024
-const val TEST_MAP_HEIGHT = 1024
+const val TEST_MAP_WIDTH = 1024f
+const val TEST_MAP_HEIGHT = 1024f
+const val INITIAL_POINTS = 200
 
-class TerrainGenerator {
-    private val simplexNoiseGenerator = SimplexNoiseGenerator(random(1000L))
+class TerrainGenerator (seed: Long = random(1000L)) {
+    private val box = BoundingBox(TEST_MAP_WIDTH, TEST_MAP_HEIGHT)
+    private val simplexNoiseGenerator = SimplexNoiseGenerator(seed)
+    private val blueNoiseGenerator = BlueNoiseGenerator(box, seed)
+    private val voronoiDiagram = VoronoiDiagram()
 
-    fun generate(): List<PositionedValue<Color>> {
-        val list = mutableListOf<PositionedValue<Color>>()
-        for (x in 0..TEST_MAP_WIDTH) {
-            for (y in 0..TEST_MAP_HEIGHT) {
-                val elevation = generateElevation(x.toFloat(), y.toFloat())
-                val color = when {
-                    elevation > .9f -> Color(255 / 255f, 255 / 255f, 255 / 255f, 1f) // snowest caps
-                    elevation > .85f -> Color(200 / 255f, 200 / 255f, 210 / 255f, 1f) // snow caps
-                    elevation > .8f -> Color(130 / 255f, 180 / 255f, 100 / 255f, 1f) // hills
-                    elevation > .52f -> Color(99 / 255f, 147 / 255f, 77 / 255f, 1f) // plains
-                    elevation > .5f -> Color(0xF1 / 255f, 0xD5 / 255f, 0xAE / 255f, 1f) // sand
-                    else -> Color(28 / 255f, 104 / 255f, 155 / 255f, 1f) // water
-                }
-                list.add(PositionedValue(
-                    Position(x.toFloat(), y.toFloat()),
-                    color
-                ))
-            }
+    fun generateRegions(): Terrain {
+        val terrain = Terrain(box)
+        val randomPoints = blueNoiseGenerator.randomList(INITIAL_POINTS)
+        val polygons = voronoiDiagram.getPolygons(randomPoints)
+        val regions = mutableListOf<TerrainRegion>()
+
+        for (poly in polygons) {
+            val elevation = generateElevation(poly.center.x, poly.center.y)
+            val type = mapElevationToType(elevation)
+            regions.add(TerrainRegion(poly, type))
         }
 
-        return list
+        terrain.regions = regions
+
+        return terrain
+    }
+
+    private fun mapElevationToType(elevation: Float): TerrainType {
+        return when {
+            elevation > .8f -> TerrainType.Hills
+            elevation > .52f -> TerrainType.Plains
+            elevation > .5f -> TerrainType.Sand
+            else -> TerrainType.Water
+        }
     }
 
     private fun generateElevation(x: Float, y: Float): Float {

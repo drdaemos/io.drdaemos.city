@@ -1,9 +1,8 @@
 package io.drdaemos.city.simulation.world
 
 import io.drdaemos.city.data.BoundingBox
-import io.drdaemos.city.data.QuadTreeNode
-import io.drdaemos.city.data.decorators.WithTerrainType
+import io.drdaemos.city.data.spatial.Polygon
 
-class Terrain (private val boundary: BoundingBox) {
-    val regions = WithTerrainType(QuadTreeNode<Any>(boundary))
+class Terrain (private val box: BoundingBox) {
+    lateinit var regions: Collection<TerrainRegion>
 }
