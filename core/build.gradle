@@ -7,10 +7,12 @@ dependencies {
 	api "com.badlogicgames.gdx:gdx:$gdxVersion"
 	api "io.github.libktx:ktx-app:$ktxVersion"
 	api "io.github.libktx:ktx-assets:$ktxVersion"
+	api "io.github.libktx:ktx-async:$ktxVersion"
 	api "io.github.libktx:ktx-graphics:$ktxVersion"
 	api "io.github.libktx:ktx-scene2d:$ktxVersion"
 	api "io.github.libktx:ktx-actors:$ktxVersion"
 	api "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+	api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3"
 	implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     implementation "com.github.PolyRocketMatt:GAMELib:main-SNAPSHOT"
 }

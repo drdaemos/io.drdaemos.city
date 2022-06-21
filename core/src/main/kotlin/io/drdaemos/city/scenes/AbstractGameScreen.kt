@@ -8,14 +8,19 @@ import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import io.drdaemos.city.entities.EntityInterface
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ktx.app.KtxScreen
 import ktx.assets.disposeSafely
+import ktx.async.KtxAsync
+import ktx.async.newSingleThreadAsyncContext
 import ktx.scene2d.Scene2DSkin
 
 abstract class AbstractGameScreen : KtxScreen {
     val skin = Skin(Gdx.files.internal("skin-default/skin/uiskin.json"))
     val input = InputMultiplexer()
     val entities = mutableListOf<EntityInterface>()
+    val asyncExecutor = newSingleThreadAsyncContext()
     lateinit var uiStage: Stage
     lateinit var camera: OrthographicCamera
     lateinit var batch: PolygonBatch
@@ -53,6 +58,14 @@ abstract class AbstractGameScreen : KtxScreen {
     override fun dispose() {
         batch.disposeSafely()
         uiStage.disposeSafely()
+    }
+
+    fun runAsync(func: () -> Unit) {
+        KtxAsync.launch {
+            withContext(asyncExecutor) {
+                func()
+            }
+        }
     }
 
     abstract fun constructUi(stage: Stage)

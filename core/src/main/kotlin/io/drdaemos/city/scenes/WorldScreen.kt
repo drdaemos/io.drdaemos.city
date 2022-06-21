@@ -3,6 +3,7 @@ package io.drdaemos.city.scenes
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
+import io.drdaemos.city.spatial.BoundingBox
 import io.drdaemos.city.generation.TerrainGenerator
 import io.drdaemos.city.entities.world.Terrain
 import io.drdaemos.city.systems.TerrainRenderer
@@ -11,10 +12,14 @@ import ktx.scene2d.actors
 import ktx.scene2d.label
 import ktx.scene2d.textButton
 
+
 class WorldScreen : AbstractGameScreen() {
-    private val terrainGenerator = TerrainGenerator()
+    private val seed = 1000L
+    private val box = BoundingBox(2048f, 1024f)
+    private val terrainGenerator = TerrainGenerator(box, seed)
     private val terrainRenderer = TerrainRenderer()
     lateinit var cameraPos: Label
+    lateinit var loading: Label
 
     override fun constructUi(stage: Stage) {
         stage.actors {
@@ -30,6 +35,10 @@ class WorldScreen : AbstractGameScreen() {
                 width = 65f
                 onClick { decreaseZoom() }
             }
+            loading = label("Please wait...") {
+                x = stage.width / 2 - this.prefWidth / 2
+                y = stage.height / 2 - this.prefHeight / 2
+            }
             cameraPos = label("") {
                 x = 10f
                 y = 10f
@@ -39,8 +48,16 @@ class WorldScreen : AbstractGameScreen() {
 
     override fun show() {
         super.show()
-        val regions = terrainGenerator.generate()
-        val terrain = Terrain.createFromRegions(regions)
+
+        runAsync {
+            generateWorldState()
+            loading.isVisible = false
+        }
+    }
+
+    private fun generateWorldState() {
+        val regions = terrainGenerator.randomIsland(10000)
+        val terrain = Terrain.createFromRegions(regions, box)
 
         entities.add(terrain)
     }
@@ -53,18 +70,18 @@ class WorldScreen : AbstractGameScreen() {
     }
 
     override fun setupCamera(camera: OrthographicCamera) {
-        camera.zoom = 2f
-        camera.position.set(512f, 512f, 0f)
+        camera.zoom = 1.5f
+        camera.position.set(box.getCenter().x, box.getCenter().y, 0f)
         // noop
     }
 
-    fun increaseZoom() {
+    private fun increaseZoom() {
         if (camera.zoom > 0f) {
             camera.zoom -= camera.zoom * .25f
         }
     }
 
-    fun decreaseZoom() {
+    private fun decreaseZoom() {
         if (camera.zoom > 0f) {
             camera.zoom += camera.zoom * .25f
         }

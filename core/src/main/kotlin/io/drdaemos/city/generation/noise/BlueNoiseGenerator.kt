@@ -1,21 +1,19 @@
 package io.drdaemos.city.generation.noise
 
 import com.badlogic.gdx.math.MathUtils.random
-import io.drdaemos.city.data.BoundingBox
-import io.drdaemos.city.data.Position
-import io.drdaemos.city.data.QuadTreeNode
-import io.drdaemos.city.data.exceptions.PositionNotEmptyException
+import io.drdaemos.city.spatial.BoundingBox
+import io.drdaemos.city.spatial.Position
+import io.drdaemos.city.spatial.QuadTreeNode
+import io.drdaemos.city.spatial.exceptions.PositionNotEmptyException
 
-const val RANDOMNESS = 2
-
-class BlueNoiseGenerator (val boundary: BoundingBox, private val seed: Long = 0L) {
-    fun randomList(count: Int): List<Position> {
+class BlueNoiseGenerator (private val boundary: BoundingBox, private val seed: Long = 0L) {
+    fun randomPoints(count: Int, randomness: Int = 10): List<Position> {
         random.setSeed(seed)
         val tree = QuadTreeNode<Any?>(boundary)
         val points = mutableListOf<Position>()
 
         repeat(count) {
-            val candidatesCount = (points.count() / RANDOMNESS) + 1
+            val candidatesCount = (points.count() / randomness) + 1
 
             val candidates = mutableListOf<Position>()
             repeat(candidatesCount) {

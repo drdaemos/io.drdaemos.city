@@ -1,8 +1,8 @@
 package io.drdaemos.city.generation.geometry
 
 import com.github.polyrocketmatt.game.math.geometry.voronoi.Delaunay
-import io.drdaemos.city.data.Position
-import io.drdaemos.city.data.spatial.Triangle
+import io.drdaemos.city.spatial.Position
+import io.drdaemos.city.spatial.aliases.Triangle
 
 class Triangulation : TriangulationInterface {
     private lateinit var delaunator: Delaunay<Position>
