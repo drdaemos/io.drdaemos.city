@@ -1,22 +1,25 @@
-package io.drdaemos.city.presentation
+package io.drdaemos.city.scenes
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.OrthographicCamera
-import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.g2d.PolygonBatch
+import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
+import io.drdaemos.city.entities.EntityInterface
 import ktx.app.KtxScreen
 import ktx.assets.disposeSafely
-import ktx.graphics.use
 import ktx.scene2d.Scene2DSkin
 
 abstract class AbstractGameScreen : KtxScreen {
-    val batch = SpriteBatch()
-    val inputHandler = InputMultiplexer()
     val skin = Skin(Gdx.files.internal("skin-default/skin/uiskin.json"))
+    val input = InputMultiplexer()
+    val entities = mutableListOf<EntityInterface>()
     lateinit var uiStage: Stage
     lateinit var camera: OrthographicCamera
+    lateinit var batch: PolygonBatch
+    lateinit var context: RenderingContext
 
     override fun show() {
         // ui
@@ -30,15 +33,20 @@ abstract class AbstractGameScreen : KtxScreen {
         setupCamera(camera)
 
         // input
-        inputHandler.setProcessors(uiStage)
-        Gdx.input.inputProcessor = inputHandler
+        input.setProcessors(uiStage)
+        Gdx.input.inputProcessor = input
+
+        // batch
+        batch = PolygonSpriteBatch()
+
+        // context
+        context = RenderingContext(0f, batch, camera, input, entities)
     }
 
     override fun render(delta: Float) {
+        context.delta = delta
         uiStage.act()
-        batch.use(camera) {
-            drawWithBatch(it, camera)
-        }
+        runSystems(context)
         uiStage.draw()
     }
 
@@ -49,5 +57,5 @@ abstract class AbstractGameScreen : KtxScreen {
 
     abstract fun constructUi(stage: Stage)
     abstract fun setupCamera(camera: OrthographicCamera)
-    abstract fun drawWithBatch(batch: SpriteBatch, camera: OrthographicCamera)
+    abstract fun runSystems(context: RenderingContext)
 }

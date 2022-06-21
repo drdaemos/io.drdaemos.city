@@ -1,7 +1,7 @@
 package io.drdaemos
 
-import io.drdaemos.city.presentation.AbstractGameScreen
-import io.drdaemos.city.presentation.WorldScreen
+import io.drdaemos.city.scenes.AbstractGameScreen
+import io.drdaemos.city.scenes.WorldScreen
 import ktx.app.KtxGame
 
 class CityApplication : KtxGame<AbstractGameScreen>() {

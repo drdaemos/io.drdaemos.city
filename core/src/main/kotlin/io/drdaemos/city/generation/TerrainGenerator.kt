@@ -1,23 +1,19 @@
 package io.drdaemos.city.generation
 
-import com.badlogic.gdx.graphics.Color
 import io.drdaemos.city.generation.noise.SimplexNoiseGenerator
 import com.badlogic.gdx.math.MathUtils.random
 import io.drdaemos.city.data.BoundingBox
-import io.drdaemos.city.data.Position
-import io.drdaemos.city.data.PositionedValue
 import io.drdaemos.city.data.TerrainType
 import io.drdaemos.city.generation.geometry.VoronoiDiagram
 import io.drdaemos.city.generation.noise.BlueNoiseGenerator
-import io.drdaemos.city.simulation.world.Terrain
-import io.drdaemos.city.simulation.world.TerrainRegion
+import io.drdaemos.city.components.TerrainRegion
 import kotlin.math.pow
 
 const val ISLAND_SHAPING = .6f
 const val NOISE_WAVELENGTH = 200
 const val TEST_MAP_WIDTH = 1024f
 const val TEST_MAP_HEIGHT = 1024f
-const val INITIAL_POINTS = 200
+const val INITIAL_POINTS = 1000
 
 class TerrainGenerator (seed: Long = random(1000L)) {
     private val box = BoundingBox(TEST_MAP_WIDTH, TEST_MAP_HEIGHT)
@@ -25,8 +21,7 @@ class TerrainGenerator (seed: Long = random(1000L)) {
     private val blueNoiseGenerator = BlueNoiseGenerator(box, seed)
     private val voronoiDiagram = VoronoiDiagram()
 
-    fun generateRegions(): Terrain {
-        val terrain = Terrain(box)
+    fun generate(): List<TerrainRegion> {
         val randomPoints = blueNoiseGenerator.randomList(INITIAL_POINTS)
         val polygons = voronoiDiagram.getPolygons(randomPoints)
         val regions = mutableListOf<TerrainRegion>()
@@ -37,9 +32,7 @@ class TerrainGenerator (seed: Long = random(1000L)) {
             regions.add(TerrainRegion(poly, type))
         }
 
-        terrain.regions = regions
-
-        return terrain
+        return regions
     }
 
     private fun mapElevationToType(elevation: Float): TerrainType {
